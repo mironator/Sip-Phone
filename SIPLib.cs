@@ -18,16 +18,17 @@ namespace SIPLib
     public delegate void Del(string Info, string Caption);
     public delegate bool DelRequest(string str);
     public delegate void DelCloseSession(string Name);
-
+    /// <summary>
+    /// Класс сессии
+    /// </summary>
     public class Session    //сама сессия
     {
-        Del DelOutput;
         DelCloseSession DelClosesession;
-        string ToIP;        //IP клиента
-        string ToUser;      //имя клиента
-        string MyName;    //наше имя
+        string ToIP;                //IP клиента
+        string ToUser;              //имя клиента
+        string MyName;              //наше имя
         System.Net.IPAddress myIP;  //наш IP
-        int n = 0;  //порядок запроса
+        int n = 0;                  //порядок запроса
         int port, myaudioport, toaudioport;   //порт
         bool SessionConfirmed = false; //флаг подтверждённости сессии (на наш запрос ответили)
         string SessionID;
@@ -35,9 +36,19 @@ namespace SIPLib
         Thread WaitForAnswer;
 
         //==============конструктор==================
-        public Session(System.Net.IPAddress myIP, int myPort, string ToIP, string ToUser, string FromUser, Del d, DelCloseSession d1, string ID, string SDPfunc)    //конструктор при звонке
+        /// <summary>
+        /// Конструктор сессии
+        /// </summary>
+        /// <param name="myIP">IP адресанта</param>
+        /// <param name="myPort">Порт адресанта</param>
+        /// <param name="ToIP">Порт адресата</param>
+        /// <param name="ToUser">Имя адресата</param>
+        /// <param name="FromUser">Имя адресанта</param>
+        /// <param name="d1">Делегат на вызов функции закрытия текущей сессии</param>
+        /// <param name="ID">ID сессии</param>
+        /// <param name="SDPfunc">Запрос SDP</param>
+        public Session(System.Net.IPAddress myIP, int myPort, string ToIP, string ToUser, string FromUser, DelCloseSession d1, string ID, string SDPfunc)    //конструктор при звонке
         {
-            DelOutput = d;
             this.ToIP = ToIP;
             this.ToUser = ToUser;
             this.MyName = FromUser;
@@ -59,6 +70,9 @@ namespace SIPLib
         }
 
         //==============внешние функции==============
+        /// <summary>
+        /// Интерфейс получения имени собеседника
+        /// </summary>
         public string _ToUser
         {
             get
@@ -66,13 +80,16 @@ namespace SIPLib
                 return ToUser;
             }
         }
-
+        /// <summary>
+        /// Функция закрытия сессии
+        /// </summary>
         public void CloseSession()
         {
-
-
+            DelClosesession(this.MyName);
         }
-
+        /// <summary>
+        /// Интерфейс подтверждённости сессии (сессия была принята или на неё как-либо иначе отреагировали)
+        /// </summary>
         public bool _SessionConfirmed
         {
             get
@@ -80,7 +97,9 @@ namespace SIPLib
                 return SessionConfirmed;
             }
         }
-
+        /// <summary>
+        /// Интерфейс получения ID сессии
+        /// </summary>
         public string _SessionID
         {
             get
@@ -88,16 +107,23 @@ namespace SIPLib
                 return this.SessionID;
             }
         }
-
+        /// <summary>
+        /// Функция проверки сессии по ID (не используется, т.к. предусмотрена для конференц связи)
+        /// </summary>
+        /// <param name="ID">Подаваемый ID</param>
+        /// <returns>Если ID сессии совпадает с подаваемым - возвратит true, иначе - false</returns>
         public bool CheckSessionByID(string ID)
         {
             if (this.SessionID == ID) return true;
             else return false;
         }
-
+        /// <summary>
+        /// Функция разбора запроса (ответа)
+        /// </summary>
+        /// <param name="Info">Подаваемый запрос в виде строки</param>
+        /// <returns>Если запрос (ответ) был распознан - возвратит true, иначе - false</returns>
         public bool WatchInfo(string Info)
         {
-            //DelOutput(Info);
             this.n++;
 
             if (Info.Contains("BYE"))    //пока
@@ -126,41 +152,35 @@ namespace SIPLib
 
             if (Info.Contains("SIP/2.0 1"))    //ответ    OK
             {
-                DelOutput("Получено 1XX", "Получен ответ");
                 return true;
             }
 
             if (Info.Contains("SIP/2.0 2"))    //ответ    OK
             {
-                DelOutput("Получено 2XX (согласие)", "Получен ответ");
                 this._2XXDecompile(Info);
                 return true;
             }
 
             if (Info.Contains("SIP/2.0 3"))    //ответ    OK
             {
-                DelOutput("Получено 3XX", "Получен ответ");
                 this._3XXDecompile(Info);
                 return true;
             }
 
             /*if (Info.Contains("SIP/2.0 4"))    //ответ    OK
             {
-                DelOutput("Получено 4XX","Получен ответ");
                 this._4XXDecompile(Info);
                 return true;
             }*/
 
             if (Info.Contains("SIP/2.0 5"))    //ответ    OK
             {
-                DelOutput("Получено 5XX", "Получен ответ");
                 this._5XXDecompile(Info);
                 return true;
             }
 
             if (Info.Contains("SIP/2.0 6"))    //ответ      DECLINE
             {
-                DelOutput("Получен 6XX (отказ)", "Получен ответ");
                 this._6XXDecompile(Info);
                 return true;
             }
@@ -169,7 +189,11 @@ namespace SIPLib
         }
 
         //==============внутренние функции==============
-
+        /// <summary>
+        /// Функция отправки пакета данных, оформленного в виде строки
+        /// </summary>
+        /// <param name="Info">Отправляемая строка</param>
+        /// <returns>Если true - отправка информации прошла успешно, иначе - false.</returns>
         bool SendInfo(string Info)      //отправка информации
         {
             System.Net.IPAddress ipAddress;         //IP того, кому посылаем
@@ -212,7 +236,9 @@ namespace SIPLib
 
             return true;
         }
-
+        /// <summary>
+        /// Функция проверки активности сессии
+        /// </summary>
         void WaitForAnswerFunc()    //функция проверки активности сессии
         {
             for (int i = 0; i < 300; i++)    //проверяем в течение 30и секунд
@@ -223,7 +249,9 @@ namespace SIPLib
             this.CloseSession();
         }
 
-        //==создание и разбор внутринностей запросов==
+        /// <summary>
+        /// Функция отправки приглашения на установление связи
+        /// </summary>
         public void Invite()
         {
             string Request = "";
@@ -240,21 +268,20 @@ namespace SIPLib
 
             Request += _SDP;
 
-            DelOutput(Request, "Из Invite");
-
-            if (!SendInfo(Request)) DelOutput("Invite failed", "Внутри Invite");
             WaitForAnswer = new Thread(WaitForAnswerFunc);
             WaitForAnswer.Start();
 
         }
-
+        /// <summary>
+        /// Функция создания и отправки запроса BYE
+        /// </summary>
         public void BYECompile()
         {
             string Request = "";
 
             Request += "BYE sip: " + this.ToUser + "@" + this.ToIP + " SIP/2.0 " + "\n";
             Request += "Record-Route: <sip:" + this.ToUser + "@" + this.myIP.ToString() + ";lr>" + "\n";
-            Request += "From: " + "\"" + this.MyName + "\"" + "<sip: " + this.MyName + "@" + this.myIP.ToString() + "> " + "\n";
+            Request += "From: " + "\"" + this.MyName + "\"" + " <sip: " + this.MyName + "@" + this.myIP.ToString() + "> " + "\n";
             Request += "To: " + "<sip: " + this.ToUser + "@" + this.ToIP + "> " + "\n";
             Request += "Call-ID: " + SessionID + "@" + this.myIP + "\n";
             Request += "CSeq:" + (++this.n).ToString() + " BYE" + "\n";
@@ -263,9 +290,12 @@ namespace SIPLib
 
             SendInfo(Request);
             DelClosesession(ToUser);
-            DelOutput(Request, "Внутри BYE");
 
         }
+        /// <summary>
+        /// Функция ответа на запрос BYE
+        /// </summary>
+        /// <param name="Info">Предлагаемый запрос</param>
         void BYEDecompile(string Info)
         {
             this._2XXCompile("00", false, true);
@@ -275,12 +305,11 @@ namespace SIPLib
         /*string REGISTER() { return null; }
         int REGISTERDecompile(string Info) { return 0; }*/
 
-
-
-
-
         //==создание и разбор внутринностей ответов==
-
+        /// <summary>
+        /// Функция создания ответа категории 1XX. XX - комбинация внутри категории
+        /// </summary>
+        /// <param name="_XX">Комбинация внутри категории</param>
         public void _1XXCompile(string _XX)
         {
             string Request = "";
@@ -304,7 +333,12 @@ namespace SIPLib
             Request += "Date: " + DateTime.Now.ToString();
             SendInfo(Request);
         }
-
+        /// <summary>
+        /// Функция создания ответа категории 2XX. XX - комбинация внутри категории
+        /// </summary>
+        /// <param name="_XX">Комбинация внутри категории</param>
+        /// <param name="SDPRequired">Флаг необходимости прикрепления SDP информации</param>
+        /// <param name="EndSession">Флаг необходимости закончить сессию после отправки данного запроса</param>
         public void _2XXCompile(string _XX, bool SDPRequired, bool EndSession)
         {
             string Request = "";
@@ -323,12 +357,21 @@ namespace SIPLib
             if (EndSession)
                 this.CloseSession();
         }
+        /// <summary>
+        /// Функция разбора запроса категории 2XX
+        /// </summary>
+        /// <param name="Info">Подаваемый запрос</param>
         void _2XXDecompile(string Info)
         {
 
         }
 
-
+        /// <summary>
+        /// Функция создания ответа категории 3XX. XX - комбинация внутри категории
+        /// </summary>
+        /// <param name="_XX">Комбинация внутри категории</param>
+        /// <param name="SDPRequired">Флаг необходимости прикрепления SDP информации</param>
+        /// <param name="EndSession">Флаг необходимости закончить сессию после отправки данного запроса</param>
         public void _3XXCompile(string _XX, bool SDPRequired, bool EndSession)
         {
             string Request = "";
@@ -358,11 +401,14 @@ namespace SIPLib
                 Request += "\n" + SDP();
 
             SendInfo(Request);
-            DelOutput(Request, "Внутри 3XX");
 
             if (EndSession)
                 this.CloseSession();
         }
+        /// <summary>
+        /// Функция разбора запроса категории 3XX
+        /// </summary>
+        /// <param name="Info">Подаваемый запрос</param>
         public void _3XXDecompile(string Info)
         {
         }
@@ -375,7 +421,12 @@ namespace SIPLib
         {
         }
         */
-
+        /// <summary>
+        /// Функция создания ответа категории 5XX. XX - комбинация внутри категории
+        /// </summary>
+        /// <param name="_XX">Комбинация внутри категории</param>
+        /// <param name="SDPRequired">Флаг необходимости прикрепления SDP информации</param>
+        /// <param name="EndSession">Флаг необходимости закончить сессию после отправки данного запроса</param>
         public void _5XXCompile(string _XX, bool SDPRequired, bool EndSession)
         {
             string Request = "";
@@ -407,16 +458,25 @@ namespace SIPLib
                 Request += "\n" + SDP();
 
             SendInfo(Request);
-            DelOutput(Request, "Внутри 5XX");
 
             if (EndSession)
                 this.CloseSession();
 
         }
+        /// <summary>
+        /// Функция разбора запроса категории 3XX
+        /// </summary>
+        /// <param name="Info">Подаваемый запрос</param>
         public void _5XXDecompile(string Info)
         {
+            this._2XXCompile("00", false, false);
         }
-
+        /// <summary>
+        /// Функция создания ответа категории 6XX. XX - комбинация внутри категории
+        /// </summary>
+        /// <param name="_XX">Комбинация внутри категории</param>
+        /// <param name="SDPRequired">Флаг необходимости прикрепления SDP информации</param>
+        /// <param name="EndSession">Флаг необходимости закончить сессию после отправки данного запроса</param>
         public void _6XXCompile(string _XX, bool SDPRequired, bool EndSession)
         {
             string Request = "";
@@ -449,23 +509,28 @@ namespace SIPLib
                 Request += "\n" + SDP();
 
             SendInfo(Request);
-            DelOutput(Request, "Внутри 6XX");
 
             if (EndSession)
                 this.CloseSession();
 
         }
+        /// <summary>
+        /// Функция разбора запроса категории 6XX
+        /// </summary>
+        /// <param name="Info">Подаваемый запрос</param>
         public void _6XXDecompile(string Info)
         {
             this._2XXCompile("00", false, true);
             this.CloseSession();
         }
 
-
         //==================================================\\
         //                      SDP                         \\
         //==================================================\\
-
+        /// <summary>
+        /// Функция получения информации для SDP протокола
+        /// </summary>
+        /// <returns></returns>
         string SDP()
         {
             string CodecInfo = "", tmp = "";
@@ -474,21 +539,24 @@ namespace SIPLib
             tmp += "v=0\n";
             tmp += "o=" + MyName + "5648733" + "247594567" + "IN IP4" + myIP + "\n";   //???????????????????????
             tmp += "c=IN IP4 " + myIP + "\n";
-            tmp += "m=audio " + this.myaudioport.ToString() + " RTP/AVP 0 8\n";
+            tmp += "m=audio " + this.myaudioport.ToString() + " RTP/AVP 0\n";
             tmp += "a=rtpmap:0 PCMU/8000\n";
-            tmp += "a=rtpmap:8 PCMA/8000\n";
 
             CodecInfo += "Content-Length: " + tmp.Length + "\n\n" + tmp;
 
             return CodecInfo;
         }
-
+        /// <summary>
+        /// Функция пересечения имеющейся SDP и поступаемой 
+        /// </summary>
+        /// <param name="str">Поступаемая SDP</param>
+        /// <returns>Результат пересечения</returns>
         string SDPcombine(string str)
         {
             string CodecInfo = "", tmp = "", tmp1 = "";
             CodecInfo += "Content-Type: application/sdp\n";
             tmp += "v=0\n";
-            tmp += "o=" + MyName + "??????" + "??????" + myIP + "\n";   //???????????????????????
+            tmp += "o=" + MyName + "??????" + "??????" + myIP + "\n";
             tmp += "c=IN IP4 " + myIP + "\n";
 
             string[] ms = str.Split('\n');
@@ -502,7 +570,7 @@ namespace SIPLib
                     this.toaudioport = Convert.ToInt32(tmp1);   //записываем аудиопорт получателя
                 }
                 if (str1.Contains("PCMU/8000")) tmp += str1 + "\n";
-                if (str1.Contains("PCMA/8000")) tmp += str1 + "\n";
+                //if (str1.Contains("PCMA/8000")) tmp += str1 + "\n";
             }
 
             CodecInfo += "Content-Length: " + tmp.Length + "\n\n" + tmp;
@@ -510,18 +578,14 @@ namespace SIPLib
         }
     }
 
-
-
     //=======================================================================================================================
     //=======================================================================================================================
     //=======================================================================================================================
-
 
     public class Listener   //прослушиватель
     {
 
         //==============переменные==============
-        static Del DelOutput;   //делегат на вывод пришедшей информации
         static DelRequest DelRequest1;  //делегат на запрос принятия приглашения
         static DelCloseSession DelClosesession;
         String host = System.Net.Dns.GetHostName();
@@ -536,11 +600,19 @@ namespace SIPLib
 
         static List<Session> Sessions = new List<Session>();
         //==============конструкторы==============
-        public Listener(int newport, Del d, DelRequest d1, string name, DelCloseSession d2)
+
+        /// <summary>
+        /// Конструктор прослушивателя
+        /// </summary>
+        /// <param name="newport">Порт прослушки (не помню точно :) )</param>
+        /// <param name="d1">Делегат на вызов запроса подтверждения приходящего вызова</param>
+        /// <param name="name">Наше имя</param>
+        /// <param name="d2">Делегат на закрытие сессии</param>
+        public Listener(int newport, DelRequest d1, string name, DelCloseSession d2)
         {
-            DelOutput = d;
             DelRequest1 = d1;
             DelClosesession = d2;
+            DelClosesession += CloseSession;
 
             myName = name;
 
@@ -548,9 +620,8 @@ namespace SIPLib
             port = newport;   //устанавливаем номер порта
             ThreadListen = new Thread(ListenSockets);   //настраиваем поток на функцию прослушки
             ThreadListen.Start();
+
         }
-
-
 
         //==============внешние функции==============
         /// <summary>
@@ -561,7 +632,7 @@ namespace SIPLib
         /// <param name="FromUser">Имя отправителя</param>
         public void MakeCall(string ToIP, string ToUser, string FromUser)
         {
-            Sessions.Add(new Session(myIP, port, ToIP, ToUser, FromUser, DelOutput, DelClosesession, (LastSessionID++).ToString(), ""));
+            Sessions.Add(new Session(myIP, port, ToIP, ToUser, FromUser, DelClosesession, (LastSessionID++).ToString(), ""));
             Sessions.Last().Invite();
         }
         /// <summary>
@@ -604,7 +675,15 @@ namespace SIPLib
         {
             ThreadListen.Abort();
             SendSocket("127.0.0.1", port, "quit");
-            Sessions.Last().BYECompile();
+            if (Sessions.Count > 0) Sessions.Last().BYECompile();
+            Sessions.Clear();
+        }
+        /// <summary>
+        /// Функция закрытия сессии
+        /// </summary>
+        /// <param name="name">Имя, с кем закрываем сессию</param>
+        private void CloseSession(string name)
+        {
             Sessions.Clear();
         }
         /// <summary>
@@ -655,11 +734,9 @@ namespace SIPLib
             tmp = tmp.Remove(tmp.IndexOf('@'));
             tmp = tmp.Remove(0, tmp.IndexOf("sip: ") + "sip: ".Length);
 
-            //DelOutput("Получили запрос для: " + tmp);
 
             if (tmp == myName)  //проверяем: нам ли адресовано
             {
-                DelOutput(Info, "Получили такой запрос");
                 if (Info.Contains("INVITE "))   //при приходе инвайта
                 {
                     tmp4 = Info.Remove(0, Info.IndexOf("From:"));
@@ -678,7 +755,7 @@ namespace SIPLib
                     SDP = Info.Remove(0, Info.IndexOf("Content-Length"));
                     SDP = SDP.Remove(0, SDP.IndexOf("\n\n") + 2);
 
-                    Sessions.Add(new Session(System.Net.Dns.GetHostByName(System.Net.Dns.GetHostName()).AddressList[0], port, tmp4, From.Remove(From.IndexOf('@')), tmp2, DelOutput, DelClosesession, tmp3, SDP));
+                    Sessions.Add(new Session(System.Net.Dns.GetHostByName(System.Net.Dns.GetHostName()).AddressList[0], port, tmp4, From.Remove(From.IndexOf('@')), tmp2, DelClosesession, tmp3, SDP));
                     Sessions.Last()._1XXCompile("01");
 
                     if (DelRequest1(From) == true)  //спрашиваем об открытии новой сессии
@@ -687,7 +764,7 @@ namespace SIPLib
                     }
                     else
                     {
-                        Sessions.Add(new Session(System.Net.Dns.GetHostByName(System.Net.Dns.GetHostName()).AddressList[0], port, tmp, tmp2, From.Remove(From.IndexOf('@')), DelOutput, DelClosesession, tmp3, ""));
+                        Sessions.Add(new Session(System.Net.Dns.GetHostByName(System.Net.Dns.GetHostName()).AddressList[0], port, tmp, tmp2, From.Remove(From.IndexOf('@')), DelClosesession, tmp3, ""));
                         Sessions.Last()._6XXCompile("03", false, true);
                         Sessions.Remove(Sessions.Last());
                     }
@@ -701,11 +778,9 @@ namespace SIPLib
 
                     foreach (Session s in Sessions)
                     {
-                        //if (s.CheckSessionByFrom(tmp, From.Remove(0, From.IndexOf('@') + 1))) s.WatchInfo(Info);  //проверка по From (имя и IP) и запуск разбора запроса
                         if (s.CheckSessionByID(tmp))    //проверка по ID
                         {
                             s.WatchInfo(Info);
-                            //DelOutput("Ответ дошёл до адресата: " + tmp);
                         }
                     }
                 }
@@ -714,6 +789,13 @@ namespace SIPLib
             Mut.ReleaseMutex();
             return true;
         }
+        /// <summary>
+        /// Функция отправки пакета данных
+        /// </summary>
+        /// <param name="ToIP">IP получателя</param>
+        /// <param name="port">порт получателя</param>
+        /// <param name="Info">Сама информация</param>
+        /// <returns>Если отправка прошла успешно - возвратит true, иначе - false</returns>
         bool SendSocket(string ToIP, int port, string Info)  //функция отправки по такому IP, в такой порт, такой инфы
         {
             System.Net.IPAddress ipAddress;         //IP того, кому посылаем
@@ -742,6 +824,14 @@ namespace SIPLib
     }
 
 
+    //=======================================================================================================================
+    //=======================================================================================================================
+    //=======================================================================================================================
+
+
+    /// <summary>
+    /// Конструктор телефонной трубки
+    /// </summary>
     public class Player
     {
         private WaveLib.WaveOutPlayer m_Player;         //проигрыватель
@@ -758,8 +848,10 @@ namespace SIPLib
         Thread ThreadListen;    //поток для прослушки
 
         /// <summary>
-        /// Конструктор объекта работы со звуком
+        /// Конструктор телефонной трубки (ничего лучше в голову не пришло)
         /// </summary>
+        /// <param name="toip">IP собеседника</param>
+        /// <param name="pr">Порт собеседника</param>
         public Player(string toip, int pr)
         {
 
@@ -788,9 +880,6 @@ namespace SIPLib
             System.Runtime.InteropServices.Marshal.Copy(m_PlayBuffer, 0, data, size);
         }
 
-
-
-
         /// <summary>
         /// Функция записи звука
         /// </summary>
@@ -805,8 +894,12 @@ namespace SIPLib
 
             m_Fifo.Write(m_RecBuffer, 0, m_RecBuffer.Length);
         }
-
-        private void DataSend(IntPtr data, int size)    //???
+        /// <summary>
+        /// Функция отправки звуковых данных
+        /// </summary>
+        /// <param name="data">Звуковые данные</param>
+        /// <param name="size">Размер данных</param>
+        private void DataSend(IntPtr data, int size)
         {
             lock (LockSend)
             {
@@ -815,7 +908,6 @@ namespace SIPLib
                 SendSocket(_ToIP, _portReceive, tmpBuffer);
             }
         }
-
         /// <summary>
         /// Получение и запись звука
         /// </summary>
@@ -842,7 +934,6 @@ namespace SIPLib
                 }
             }
         }
-
         /// <summary>
         /// Конец записи/воспроизведения звука
         /// </summary>
@@ -898,6 +989,7 @@ namespace SIPLib
         bool SendSocket(string ToIP, int port, Byte[] sendBytes)  //функция отправки по такому IP, в такой порт, такой инфы
         {
             System.Net.IPAddress ipAddress;         //IP того, кому посылаем
+
             UdpClient udpClient = new UdpClient();  //создаём UDP клиент
 
             if (!System.Net.IPAddress.TryParse(ToIP, out ipAddress))    //получаем адрес компа. out - возвращаем по ссылке
@@ -918,19 +1010,15 @@ namespace SIPLib
 
             return true;
         }
-
+        /// <summary>
+        /// Функция установки параметров трубки
+        /// </summary>
+        /// <param name="toip">IP собеседника</param>
+        /// <param name="pr">Порт собеседника</param>
         public void SetOptions(string toip, int pr)
         {
             _portReceive = pr;
             _ToIP = toip;
-        }
-
-        public string Options
-        {
-            get
-            {
-                return _ToIP + " " + _portReceive.ToString();
-            }
         }
     }
 }
