@@ -22,7 +22,8 @@ namespace Phone
         SIPLib.DelRequest DelRequest1;
         SIPLib.Listener Phone;
         SIPLib.Player player = new Player("127.0.0.1", portplayer);
-        DelCloseSession DelClosesession;
+        public DelCloseSession DelClosesession;
+        SIPLib.DelStopListener DelStoplistener;
         static int portplayer = 4000;
         static int port = 5060;
 
@@ -33,6 +34,7 @@ namespace Phone
             DelOutput += funcOutput;
             DelRequest1 += ReceivedInvite;
             DelClosesession += CloseSession;
+            DelStoplistener += DelStoplistener;
         }
 
         public void funcOutput(string Info, string Caption)
@@ -51,7 +53,7 @@ namespace Phone
                 this.btnPause.Enabled = true;
                 this.btnResume.Enabled = false;
                 return true;
-                
+
             }
             else
             {
@@ -64,7 +66,7 @@ namespace Phone
         {
             ListView.ListViewItemCollection items = new ListView.ListViewItemCollection(new ListView());
 
-            
+
         }
 
         private void btnMakeDirectCall_Click(object sender, EventArgs e)
@@ -74,6 +76,7 @@ namespace Phone
             player.Start();
             this.btnMakeDirectCall.Enabled = false;
             this.btnHangUpDirectCall.Enabled = true;
+            this.btnLogOut.Enabled = false;
             this.btnPause.Enabled = true;
             this.btnResume.Enabled = false;
             this.tbTargetIP.Enabled = false;
@@ -84,6 +87,7 @@ namespace Phone
         {
             this.btnMakeDirectCall.Enabled = true;
             this.btnHangUpDirectCall.Enabled = false;
+            this.btnLogOut.Enabled = true;
             this.btnPause.Enabled = false;
             this.btnResume.Enabled = false;
             this.tbTargetIP.Enabled = true;
@@ -91,11 +95,19 @@ namespace Phone
             Phone.StopPhone();
             player.Stop();
         }
+
+        public void StopListenerFunc()
+        {
+            Phone.StopPhone();
+        }
+
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             try
             {
                 Phone.StopPhone();
+                player.Stop();
+                Application.Exit();
             }
             catch (Exception)
             {
@@ -105,10 +117,12 @@ namespace Phone
 
         private void btnLogIn_Click(object sender, EventArgs e)
         {
-            Phone = new SIPLib.Listener(port, DelRequest1, this.tbAccountUser.Text,DelClosesession);  //класс слушателя
+            Phone = new SIPLib.Listener(port, DelRequest1, this.tbAccountUser.Text, DelClosesession, DelOutput, DelStoplistener);  //класс слушателя
+
             btnMakeDirectCall.Enabled = true;
-            btnHangUpDirectCall.Enabled = true;
+            btnHangUpDirectCall.Enabled = false;
             btnLogIn.Enabled = false;
+            btnLogOut.Enabled = true;
             tbAccountUser.Enabled = false;
         }
 
@@ -131,6 +145,16 @@ namespace Phone
             player.Start();
             this.btnPause.Enabled = true;
             this.btnResume.Enabled = false;
+        }
+
+        private void btnLogOut_Click(object sender, EventArgs e)
+        {
+            Phone.StopPhone();
+            btnMakeDirectCall.Enabled = false;
+            btnHangUpDirectCall.Enabled = false;
+            btnLogIn.Enabled = true;
+            btnLogOut.Enabled = false;
+            tbAccountUser.Enabled = true;
         }
 
     }

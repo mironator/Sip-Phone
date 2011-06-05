@@ -47,8 +47,6 @@
             this.Item1 = new System.Windows.Forms.ToolStripMenuItem();
             this.выйтиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainMenu = new System.Windows.Forms.MenuStrip();
-            this.настройкиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.портыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.DirectCallTab.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -179,21 +177,22 @@
             // 
             // btnLogOut
             // 
+            this.btnLogOut.Enabled = false;
             this.btnLogOut.Location = new System.Drawing.Point(31, 104);
             this.btnLogOut.Name = "btnLogOut";
-            this.btnLogOut.Size = new System.Drawing.Size(75, 23);
+            this.btnLogOut.Size = new System.Drawing.Size(88, 23);
             this.btnLogOut.TabIndex = 4;
             this.btnLogOut.Text = "Выйти";
             this.btnLogOut.UseVisualStyleBackColor = true;
-            this.btnLogOut.Click += new System.EventHandler(this.btnLogIn_Click);
+            this.btnLogOut.Click += new System.EventHandler(this.btnLogOut_Click);
             // 
             // btnLogIn
             // 
-            this.btnLogIn.Location = new System.Drawing.Point(31, 65);
+            this.btnLogIn.Location = new System.Drawing.Point(31, 71);
             this.btnLogIn.Name = "btnLogIn";
-            this.btnLogIn.Size = new System.Drawing.Size(75, 23);
+            this.btnLogIn.Size = new System.Drawing.Size(88, 23);
             this.btnLogIn.TabIndex = 4;
-            this.btnLogIn.Text = "Зайти";
+            this.btnLogIn.Text = "Авторизироваться";
             this.btnLogIn.UseVisualStyleBackColor = true;
             this.btnLogIn.Click += new System.EventHandler(this.btnLogIn_Click);
             // 
@@ -210,7 +209,7 @@
             // 
             this.tbAccountUser.Location = new System.Drawing.Point(6, 39);
             this.tbAccountUser.Name = "tbAccountUser";
-            this.tbAccountUser.Size = new System.Drawing.Size(100, 20);
+            this.tbAccountUser.Size = new System.Drawing.Size(137, 20);
             this.tbAccountUser.TabIndex = 0;
             this.tbAccountUser.Text = "USER1";
             // 
@@ -236,7 +235,7 @@
             // выйтиToolStripMenuItem
             // 
             this.выйтиToolStripMenuItem.Name = "выйтиToolStripMenuItem";
-            this.выйтиToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.выйтиToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
             this.выйтиToolStripMenuItem.Text = "Выйти";
             this.выйтиToolStripMenuItem.Click += new System.EventHandler(this.выйтиToolStripMenuItem_Click);
             // 
@@ -244,27 +243,12 @@
             // 
             this.MainMenu.BackColor = System.Drawing.SystemColors.Control;
             this.MainMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.Item1,
-            this.настройкиToolStripMenuItem});
+            this.Item1});
             this.MainMenu.Location = new System.Drawing.Point(0, 0);
             this.MainMenu.Name = "MainMenu";
             this.MainMenu.Size = new System.Drawing.Size(311, 24);
             this.MainMenu.TabIndex = 1;
             this.MainMenu.Text = "menuStrip1";
-            // 
-            // настройкиToolStripMenuItem
-            // 
-            this.настройкиToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.портыToolStripMenuItem});
-            this.настройкиToolStripMenuItem.Name = "настройкиToolStripMenuItem";
-            this.настройкиToolStripMenuItem.Size = new System.Drawing.Size(73, 20);
-            this.настройкиToolStripMenuItem.Text = "Настройки";
-            // 
-            // портыToolStripMenuItem
-            // 
-            this.портыToolStripMenuItem.Name = "портыToolStripMenuItem";
-            this.портыToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.портыToolStripMenuItem.Text = "Порты";
             // 
             // MainWindow
             // 
@@ -313,8 +297,6 @@
         private System.Windows.Forms.MenuStrip MainMenu;
         private System.Windows.Forms.Button btnPause;
         private System.Windows.Forms.Button btnResume;
-        private System.Windows.Forms.ToolStripMenuItem настройкиToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem портыToolStripMenuItem;
 
     }
 }
